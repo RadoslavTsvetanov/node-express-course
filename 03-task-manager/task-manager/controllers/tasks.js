@@ -1,42 +1,37 @@
+const asyncWrapper = require('../middleware/async')
 const Task = require('../models/Task')
-
-const getAllTasks = async (req, res) => {
-  try   
-  {
+const {createCustomError} = require('./errors/custom-error')
+const getAllTasks = asyncWrapper( async (req, res) => {
+  
     const tasks = await Task.find({})
-  res.status(200).json({ tasks })
-}catch(err){
-    res.status(500).json({err})
-}
-}
+    res.status(200).json({ tasks })
+})
 
-const createTask = async (req, res) => {
+const createTask = asyncWrapper(async (req, res) => {
 
     const task = await Task.create(req.body)
-  res.status(201).json({ task })
-}
+    res
+    .status(201)
+    .json({ task })
+})
 
-const getTask = async (req, res, next) => {
-  try{
+const getTask = asyncWrapper(async (req, res, next) => {
+  
     const { id: taskID } = req.params
   const task = await Task.findOne({ _id: taskID })
   if (!task) {
+    return next(createCustomError('task not found',404))
     return res
     .status(404)
     .json({ error: 'Task not found' })
   }
   res.status(200).json({ task })
-}catch(error){
-    res
-    .status(500)
-    .json({ error: error})
-}
-}
+
+})
 
 
 
-const deleteTask = async (req, res, next) => {
-try{  
+const deleteTask = asyncWrapper(async (req, res, next) => {
     const { id: taskID } = req.params
   const task = await Task.findOneAndDelete({ _id: taskID })
   if (!task) {
@@ -45,14 +40,9 @@ try{
     .json({ error: 'Task not found'})
   }
   res.status(200).json({ task })
-}catch(err){
-    res
-    .status(500)
-    . json({ error: err})
-}
-}
-const updateTask = async (req, res, next) => {
- try{ const { id: taskID } = req.params
+})
+const updateTask = asyncWrapper(async (req, res, next) => {
+  const { id: taskID } = req.params
 
   const task = await Task.findOneAndUpdate({ _id: taskID }, req.body, {
     new: true,
@@ -66,11 +56,7 @@ const updateTask = async (req, res, next) => {
   }
 
   res.status(200).json({ task })
-
-}catch(error) {
-    re.status(404).json({ error: error})
-}
-}
+})
 module.exports = {
   getAllTasks,
   createTask,
